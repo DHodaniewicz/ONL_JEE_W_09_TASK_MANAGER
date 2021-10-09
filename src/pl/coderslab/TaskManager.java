@@ -5,6 +5,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,16 +17,15 @@ import java.util.Scanner;
 public class TaskManager {
     public static void main(String[] args) {
 
-        printMenu();
         String [][] tasks = getTaskList();
 
         Scanner menuOption = new Scanner(System.in);
         String input;
         boolean loop = true;
 
-
         while (loop)
         {
+            printMenu();
             input = menuOption.nextLine();
 
             switch (input) {
@@ -33,6 +33,7 @@ public class TaskManager {
                     printList(tasks);
                     break;
                 case "exit":
+                    exitAndSave(tasks);
                     System.out.println(ConsoleColors.RED + "Bye, bye.");
                     loop = false;
                     break;
@@ -45,10 +46,7 @@ public class TaskManager {
                 default:
                     System.out.println("Please select a correct option.");
             }
-            printMenu();
         }
-
-
     }
 
     public static void printMenu() {
@@ -61,7 +59,7 @@ public class TaskManager {
 
     public static String[][] getTaskList() {
 
-        String[][] taskList = new String[10][3];
+        String[][] taskList = new String[20][3];
         int listCounter = 0;
         Path path = Paths.get("tasks.csv");
         String tempStr;
@@ -103,14 +101,13 @@ public class TaskManager {
          System.out.println("Please add task description");
          addTask [0] = scanner.nextLine();
 
-         System.out.println("Please add task due date");
+         System.out.println("Please add task due date in format YYYY-MM-DD");
          String date = scanner.nextLine();
          while (isValidDate(date) == false) {
              date = scanner.nextLine();
          }
 
          addTask [1] = " " + date;
-
 
          System.out.println("Is your task important: true/false");
          String trueFalse = scanner.nextLine();
@@ -148,11 +145,12 @@ public class TaskManager {
                 System.out.println("Invalid day");
                 return false;
             } else {
-                System.out.println("Podana data jest prawidlowa");
+                System.out.println("Date is valid");
                 return true;
             }
         } catch (NumberFormatException e) {
             System.out.println("Exception occured: " + e.getMessage());
+            System.out.println("Invalid date input");
             return false;
         }
      }
@@ -176,21 +174,43 @@ public class TaskManager {
              return taskListRemovedTask;
          } catch (InputMismatchException e) {
              System.out.println("Invalid format of input data! Input has to be an Integer");
+             System.out.println("Task has not been removed");
              return taskList;
          }
      }
 
-     public static boolean isInteger(String input) {
+     public static void exitAndSave ( String [][]taskList) {
 
-        try {
-            Integer.parseInt(input);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
+        try (PrintWriter printWriter = new PrintWriter("tasks.csv")) {
+            for (int i = 0; i < taskList.length; i++) {
+                for (int j = 0; j < taskList[i].length; j++){
+                    if (j < 2) {
+                        printWriter.print(taskList[i][j] + ",");
+                    } else{
+                        printWriter.print(taskList[i][j]);
+                    }
+                }
+                printWriter.println();
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
         }
      }
 
-
+     public static boolean isValidInt (String inputStr) {
+        if (NumberUtils.isParsable(inputStr)) {
+            try {
+                Integer.parseInt(inputStr);
+                return true;
+            } catch (NumberFormatException e) {
+                System.out.println("Input has to be an Integer");
+                return false;
+            }
+         } else {
+            System.out.println("Input has to be an Integer");
+            return false;
+        }
+     }
 
 }
 
